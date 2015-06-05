@@ -12,13 +12,15 @@
 #[ "${NETWORKING}" = "no" ] && exit 0
 
 PROG="/usr/bin/Xvfb"
-PROG_OPTIONS="$DISPLAY -screen 0 1600x1200x24 -ac"
-PROG_OUTPUT="/tmp/xvfb.start"
+PROG_DISPLAY=":10"
+PROG_OPTIONS="-screen 0 1600x1200x24 -ac"
+PROG_OUTPUT="/sicarius/xvfb.start"
 
 case "$1" in
     start)
         echo "Starting : X Virtual Frame Buffer "
-        $PROG $PROG_OPTIONS >> $PROG_OUTPUT 2>&1 &
+        $PROG $PROG_DISPLAY $PROG_OPTIONS >> $PROG_OUTPUT 2>&1 &
+        echo "$PROG $PROG_DISPLAY $PROG_OPTIONS >> $PROG_OUTPUT 2>&1 &"
         echo "Xvfb successfully started"
         ;;
     stop)
