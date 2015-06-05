@@ -1,0 +1,53 @@
+#!/bin/bash
+#
+# /etc/rc.d/init.d/xvfbd
+#
+# chkconfig: 345 95 28
+# description: Starts/Stops X Virtual Framebuffer server
+# processname: Xvfb
+#
+
+#. /etc/init.d/functions
+
+#[ "${NETWORKING}" = "no" ] && exit 0
+
+PROG="/usr/bin/Xvfb"
+PROG_OPTIONS="$DISPLAY -screen 0 1600x1200x24 -ac"
+PROG_OUTPUT="/tmp/xvfb.start"
+
+case "$1" in
+    start)
+        echo "Starting : X Virtual Frame Buffer "
+        $PROG $PROG_OPTIONS >> $PROG_OUTPUT 2>&1 &
+        echo "Xvfb successfully started"
+        ;;
+    stop)
+        echo "Shutting down : X Virtual Frame Buffer"
+        PID_FILE=`/sbin/pidof -x Xvfb `
+        if [ -z "$PID_FILE" ]
+        then
+                echo "Xvfb is not running"
+        else
+                kill $PID_FILE
+                echo "Xvfb successfully stopped"
+        fi
+        ;;
+    restart|reload)
+        $0 stop
+        $0 start
+        RETVAL=$?
+        ;;
+    status)
+        PID_FILE=`/sbin/pidof -x Xvfb `
+        if [ -z "$PID_FILE" ]
+        then
+                echo "Xvfb is not running"
+        else
+                echo "Xvfb is running with PID [$PID_FILE]"
+        fi
+        ;;
+    *)
+     echo $"Usage: $0 (start|stop|restart|reload|status)"
+     exit 1
+esac
+exit
