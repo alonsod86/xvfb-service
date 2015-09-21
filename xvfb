@@ -3,7 +3,7 @@
 # /etc/rc.d/init.d/xvfbd
 #
 # chkconfig: 345 95 28
-# description: Starts/Stops X Virtual Framebuffer server
+# description: Starts/Stops X Virtual Framebuffer server along with x11vnc and ratpoison
 # processname: Xvfb
 #
 
@@ -13,43 +13,59 @@
 
 PROG="/usr/bin/Xvfb"
 PROG_DISPLAY=":10"
-PROG_OPTIONS="-screen 0 1600x1200x24 -ac"
-PROG_OUTPUT="/sicarius/xvfb.start"
+PROG_OPTIONS="-screen 0 4096x3112x24 -ac"
+PROG_OUTPUT="/dev/null"
+PROG_SICARIUS="/sicarius/Sicarius2/bin/"
+COUNT=0
+TOMCAT_USER="sicarius"
+export HOME=/home/sicarius
 
 case "$1" in
     start)
-        echo "Starting : X Virtual Frame Buffer "
-        $PROG $PROG_DISPLAY $PROG_OPTIONS >> $PROG_OUTPUT 2>&1 &
-        echo "$PROG $PROG_DISPLAY $PROG_OPTIONS >> $PROG_OUTPUT 2>&1 &"
-        echo "Xvfb successfully started"
-        ;;
+	echo "Starting : Xvfb "
+	#/usr/bin/Xvfb :10 -screen 0 1280x1024x24  >> /sicarius/xvfb.start 2>&1 &
+	/bin/su - -c "$PROG $PROG_DISPLAY $PROG_OPTIONS >> $PROG_OUTPUT 2>&1 &" $TOMCAT_USER
+	echo "Xvfb successfully started"
+	sleep 1
+	#x11vnc -display :10 -forever >> $PROG_OUTPUT 2>&1 &
+	/bin/su - -c "x11vnc -display :10 -forever >> $PROG_OUTPUT 2>&1 &" $TOMCAT_USER
+	echo "x11vnc successfully started"
+	sleep 1
+	DISPLAY=:10 /bin/su - -c "ratpoison >> $PROG_OUTPUT 2>&1 &" $TOMCAT_USER
+	echo "ratpoison successfully started"
+	sleep 1
+    echo "Sicarius successfully started"
+	;;
     stop)
-        echo "Shutting down : X Virtual Frame Buffer"
-        PID_FILE=`/sbin/pidof -x Xvfb `
-        if [ -z "$PID_FILE" ]
-        then
-                echo "Xvfb is not running"
-        else
-                kill $PID_FILE
-                echo "Xvfb successfully stopped"
-        fi
+    echo "Shutting down : Xvfb"
+	PID_FILE=`/sbin/pidof -x Xvfb`
+	if [ -z "$PID_FILE" ]
+	then
+		echo "Xvfb is not running"
+	else
+		kill $PID_FILE
+		pkill ratpoison
+		pkill x11vnc
+		echo "Xvfb successfully stopped"
+	fi
         ;;
     restart|reload)
-        $0 stop
-        $0 start
+    	$0 stop
+    	$0 start
         RETVAL=$?
-        ;;
+      	;;
     status)
-        PID_FILE=`/sbin/pidof -x Xvfb `
-        if [ -z "$PID_FILE" ]
-        then
-                echo "Xvfb is not running"
-        else
-                echo "Xvfb is running with PID [$PID_FILE]"
-        fi
-        ;;
+	PID_FILE=`/sbin/pidof -x Xvfb`
+	
+	if [ -z "$PID_FILE" ]
+	then
+		echo "Xvfb is not running"
+	else
+		echo "Xvfb is running with PID [$PID_FILE]"
+	fi
+    	;;
     *)
      echo $"Usage: $0 (start|stop|restart|reload|status)"
      exit 1
 esac
-exit
+exit 
